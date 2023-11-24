@@ -25,6 +25,7 @@ func main() {
 		r.Post("/", handlers.PostBrand)
 		r.Delete("/{id}", handlers.DeleteBrand)
 	})
+
 	router.Route("/categories", func(r chi.Router) {
 		r.Use(middleware)
 		r.Get("/", handlers.GetCategories)
@@ -32,6 +33,7 @@ func main() {
 		r.Post("/", handlers.PostCategories)
 		r.Delete("/{id}", handlers.DeleteCategories)
 	})
+
 	router.Route("/products", func(r chi.Router) {
 		r.Use(middleware)
 		r.Get("/", handlers.GetProducts)
@@ -39,12 +41,13 @@ func main() {
 		r.Post("/", handlers.PostProducts)
 		r.Delete("/{id}", handlers.DeleteProducts)
 	})
-	router.Route("/suppliers", func(r chi.Router) {
+
+	router.Route("/stocks", func(r chi.Router) {
 		r.Use(middleware)
-		r.Get("/", handlers.GetSuppliers)
-		r.Put("/{id}", handlers.PutSuppliers)
-		r.Post("/", handlers.PostSuppliers)
-		r.Delete("/{id}", handlers.DeleteSuppliers)
+		r.Get("/", handlers.GetStocks)
+		r.Put("/{id}", handlers.PutStocks)
+		r.Post("/", handlers.PostStocks)
+		r.Delete("/{id}", handlers.DeleteStocks)
 	})
 
 	fmt.Println("Server started at :8080")

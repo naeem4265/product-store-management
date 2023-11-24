@@ -30,6 +30,22 @@ type Product struct {
 	StatusID       int     `json:"product_status_id" bson:"product_status_id"`
 }
 
+/*
+{
+  "product_id": 1,
+  "product_name": "Example Product",
+  "product_description": "A detailed description of the product.",
+  "product_specifications": "Specifications of the product.",
+  "product_brand_id": 123,
+  "product_category_id": 456,
+  "product_supplier_id": 789,
+  "product_unit_price": 49.99,
+  "product_discount_price": 39.99,
+  "product_tags": "electronics, gadgets",
+  "product_status_id": 1
+}
+*/
+
 type Supplier struct {
 	ID         int    `json:"supplier_id" bson:"supplier_id"`
 	Name       string `json:"supplier_name" bson:"supplier_name"`
@@ -38,4 +54,11 @@ type Supplier struct {
 	StatusID   int    `json:"supplier_status_id" bson:"supplier_status_id"`
 	IsVerified bool   `json:"supplier_is_verified_supplier" bson:"supplier_is_verified_supplier"`
 	CreatedAt  string `json:"supplier_created_at" bson:"supplier_created_at"`
+}
+
+type Stock struct {
+	ID            int    `json:"stock_id" bson:"stock_id"`
+	ProductID     int    `json:"product_id" bson:"product_id"`
+	StockQuantity int    `json:"stock_quantity" bson:"stock_quantity"`
+	UpdatedAt     string `json:"updated_at" bson:"updated_at"`
 }

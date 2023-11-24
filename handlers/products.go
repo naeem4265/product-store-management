@@ -108,7 +108,7 @@ func PutProducts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if id != temp.ID {
-		w.WriteHeader(http.StatusConflict)
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 

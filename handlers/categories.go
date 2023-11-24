@@ -108,7 +108,7 @@ func PutCategories(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if id != temp.CategoryId {
-		w.WriteHeader(http.StatusConflict)
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 

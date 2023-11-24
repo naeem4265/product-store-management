@@ -14,60 +14,53 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func GetBrands(w http.ResponseWriter, r *http.Request) {
-	// Create the MongoDB client
+func GetStocks(w http.ResponseWriter, r *http.Request) {
 	client, err := CreateMongoDBClient()
 	if err != nil {
 		log.Fatal(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	defer client.Disconnect(context.TODO()) // Make sure to close the client when done
-	// Access the "brands" collection in the "productStore" database
+	defer client.Disconnect(context.TODO())
 
-	collection := client.Database("productStore").Collection("brands")
-	// Get the documents from the "brands" collection
+	collection := client.Database("productStore").Collection("stocks")
 	cur, err := collection.Find(context.TODO(), bson.D{})
 	if err != nil {
 		log.Fatal(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	defer cur.Close(context.TODO()) // Close the cursor when done
+	defer cur.Close(context.TODO())
 
-	// Create a slice to hold the retrieved documents
-	var brands []bson.M
+	var stocks []bson.M
 	for cur.Next(context.TODO()) {
-		var brand bson.M
-		err := cur.Decode(&brand)
+		var stock bson.M
+		err := cur.Decode(&stock)
 		if err != nil {
 			log.Fatal(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		brands = append(brands, brand)
+		stocks = append(stocks, stock)
 	}
 
-	// Convert the brands slice to JSON
-	brandsJSON, err := json.MarshalIndent(brands, "", "  ")
+	stocksJSON, err := json.MarshalIndent(stocks, "", "  ")
 	if err != nil {
 		log.Fatal(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write(brandsJSON)
+	w.Write(stocksJSON)
 }
 
-func PostBrand(w http.ResponseWriter, r *http.Request) {
-	// get data from json
-	var temp data.Brand
+func PostStocks(w http.ResponseWriter, r *http.Request) {
+	var temp data.Stock
 	if err := json.NewDecoder(r.Body).Decode(&temp); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	// Create the MongoDB client
 	client, err := CreateMongoDBClient()
 	if err != nil {
 		log.Printf("Error creating MongoDB client: %v\n", err)
@@ -75,12 +68,11 @@ func PostBrand(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer client.Disconnect(context.TODO())
-	// Access the "brands" collection in the "productStore" database
-	collection := client.Database("productStore").Collection("brands")
 
-	// Create a unique compound index on the "brand_id" and "brand_name" fields
+	collection := client.Database("productStore").Collection("stocks")
+
 	indexModel := mongo.IndexModel{
-		Keys:    bson.M{"brand_id": 1},
+		Keys:    bson.M{"stock_id": 1},
 		Options: options.Index().SetUnique(true),
 	}
 	_, err = collection.Indexes().CreateOne(context.TODO(), indexModel)
@@ -93,7 +85,6 @@ func PostBrand(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Insert the document into the "brands" collection
 	_, err = collection.InsertOne(context.TODO(), temp)
 	if err != nil {
 		if mongo.IsDuplicateKeyError(err) {
@@ -107,20 +98,20 @@ func PostBrand(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func PutBrand(w http.ResponseWriter, r *http.Request) {
+func PutStocks(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)
 
-	var temp data.Brand
+	var temp data.Stock
 	if err := json.NewDecoder(r.Body).Decode(&temp); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	if id != temp.BrandId {
+	if id != temp.ID {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	// Create the MongoDB client
+
 	client, err := CreateMongoDBClient()
 	if err != nil {
 		log.Fatal(err)
@@ -128,22 +119,16 @@ func PutBrand(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer client.Disconnect(context.TODO())
-	collection := client.Database("productStore").Collection("brands")
 
-	// Create a filter based on the provided ID
-	filter := bson.D{{"brand_id", id}}
-	// Create an update document using $set operator
+	collection := client.Database("productStore").Collection("stocks")
+	filter := bson.D{{"stock_id", id}}
 	update := bson.D{{"$set", temp}}
-
-	// Update the document in the "brands" collection
 	result, err := collection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		log.Fatal(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
-	// Check if a document was updated
 	if result.ModifiedCount == 0 {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -151,33 +136,26 @@ func PutBrand(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func DeleteBrand(w http.ResponseWriter, r *http.Request) {
+func DeleteStocks(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)
 
-	// Create the MongoDB client
 	client, err := CreateMongoDBClient()
 	if err != nil {
 		log.Fatal(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	defer client.Disconnect(context.TODO()) // Make sure to close the client when done
+	defer client.Disconnect(context.TODO())
+	collection := client.Database("productStore").Collection("stocks")
 
-	// Access the "brands" collection in the "productStore" database
-	collection := client.Database("productStore").Collection("brands")
-
-	// Create a filter based on the provided ID
-	filter := bson.D{{"brand_id", id}}
-	// Delete the document from the "brands" collection
+	filter := bson.D{{"stock_id", id}}
 	result, err := collection.DeleteOne(context.TODO(), filter)
 	if err != nil {
 		log.Fatal(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
-	// Check if a document was deleted
 	if result.DeletedCount == 0 {
 		w.WriteHeader(http.StatusNotFound)
 		return
