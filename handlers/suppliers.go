@@ -14,7 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func GetProducts(w http.ResponseWriter, r *http.Request) {
+func GetSuppliers(w http.ResponseWriter, r *http.Request) {
 	client, err := CreateMongoDBClient()
 	if err != nil {
 		log.Fatal(err)
@@ -23,7 +23,7 @@ func GetProducts(w http.ResponseWriter, r *http.Request) {
 	}
 	defer client.Disconnect(context.TODO())
 
-	collection := client.Database("productStore").Collection("products")
+	collection := client.Database("productStore").Collection("suppliers")
 	cur, err := collection.Find(context.TODO(), bson.D{})
 	if err != nil {
 		log.Fatal(err)
@@ -32,30 +32,30 @@ func GetProducts(w http.ResponseWriter, r *http.Request) {
 	}
 	defer cur.Close(context.TODO())
 
-	var products []bson.M
+	var suppliers []bson.M
 	for cur.Next(context.TODO()) {
-		var product bson.M
-		err := cur.Decode(&product)
+		var supplier bson.M
+		err := cur.Decode(&supplier)
 		if err != nil {
 			log.Fatal(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		products = append(products, product)
+		suppliers = append(suppliers, supplier)
 	}
 
-	productsJSON, err := json.MarshalIndent(products, "", "  ")
+	suppliersJSON, err := json.MarshalIndent(suppliers, "", "  ")
 	if err != nil {
 		log.Fatal(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write(productsJSON)
+	w.Write(suppliersJSON)
 }
 
-func PostProducts(w http.ResponseWriter, r *http.Request) {
-	var temp data.Product
+func PostSuppliers(w http.ResponseWriter, r *http.Request) {
+	var temp data.Supplier
 	if err := json.NewDecoder(r.Body).Decode(&temp); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -69,10 +69,10 @@ func PostProducts(w http.ResponseWriter, r *http.Request) {
 	}
 	defer client.Disconnect(context.TODO())
 
-	collection := client.Database("productStore").Collection("products")
+	collection := client.Database("productStore").Collection("suppliers")
 
 	indexModel := mongo.IndexModel{
-		Keys:    bson.M{"product_id": 1},
+		Keys:    bson.M{"supplier_id": 1},
 		Options: options.Index().SetUnique(true),
 	}
 	_, err = collection.Indexes().CreateOne(context.TODO(), indexModel)
@@ -98,11 +98,11 @@ func PostProducts(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func PutProducts(w http.ResponseWriter, r *http.Request) {
+func PutSuppliers(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)
 
-	var temp data.Product
+	var temp data.Supplier
 	if err := json.NewDecoder(r.Body).Decode(&temp); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -120,8 +120,8 @@ func PutProducts(w http.ResponseWriter, r *http.Request) {
 	}
 	defer client.Disconnect(context.TODO())
 
-	collection := client.Database("productStore").Collection("products")
-	filter := bson.D{{"product_id", id}}
+	collection := client.Database("productStore").Collection("suppliers")
+	filter := bson.D{{"supplier_id", id}}
 	update := bson.D{{"$set", temp}}
 	result, err := collection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
@@ -136,7 +136,7 @@ func PutProducts(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func DeleteProducts(w http.ResponseWriter, r *http.Request) {
+func DeleteSuppliers(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)
 
@@ -147,9 +147,9 @@ func DeleteProducts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer client.Disconnect(context.TODO())
-	collection := client.Database("productStore").Collection("products")
+	collection := client.Database("productStore").Collection("suppliers")
 
-	filter := bson.D{{"product_id", id}}
+	filter := bson.D{{"supplier_id", id}}
 	result, err := collection.DeleteOne(context.TODO(), filter)
 	if err != nil {
 		log.Fatal(err)

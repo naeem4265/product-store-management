@@ -29,3 +29,13 @@ type Product struct {
 	Tags           string  `json:"product_tags" bson:"product_tags"`
 	StatusID       int     `json:"product_status_id" bson:"product_status_id"`
 }
+
+type Supplier struct {
+	ID         int    `json:"supplier_id" bson:"supplier_id"`
+	Name       string `json:"supplier_name" bson:"supplier_name"`
+	Email      string `json:"supplier_email" bson:"supplier_email"`
+	Phone      string `json:"supplier_phone" bson:"supplier_phone"`
+	StatusID   int    `json:"supplier_status_id" bson:"supplier_status_id"`
+	IsVerified bool   `json:"supplier_is_verified_supplier" bson:"supplier_is_verified_supplier"`
+	CreatedAt  string `json:"supplier_created_at" bson:"supplier_created_at"`
+}
