@@ -32,6 +32,13 @@ func main() {
 		r.Post("/", handlers.PostCategories)
 		r.Delete("/{id}", handlers.DeleteCategories)
 	})
+	router.Route("/products", func(r chi.Router) {
+		r.Use(middleware)
+		r.Get("/", handlers.GetProducts)
+		r.Put("/{id}", handlers.PutProducts)
+		r.Post("/", handlers.PostProducts)
+		r.Delete("/{id}", handlers.DeleteProducts)
+	})
 
 	fmt.Println("Server started at :8080")
 	log.Fatal(http.ListenAndServe(":8080", router))

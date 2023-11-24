@@ -15,10 +15,5 @@ func CreateMongoDBClient() (*mongo.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	// Check the connection
-	err = client.Ping(context.TODO(), nil)
-	if err != nil {
-		return nil, err
-	}
 	return client, nil
 }
