@@ -45,10 +45,64 @@ func GetBrands(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		brands = append(brands, brand)
+		statusNow := brand["brand_status_id"].(int32)
+		active := int32(1)
+		if statusNow == active {
+			brands = append(brands, brand)
+		}
 	}
 
 	// Convert the brands slice to JSON
+	brandsJSON, err := json.MarshalIndent(brands, "", "  ")
+	if err != nil {
+		log.Fatal(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(brandsJSON)
+}
+
+func GetBrandById(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idStr)
+
+	client, err := CreateMongoDBClient()
+	if err != nil {
+		log.Fatal(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer client.Disconnect(context.TODO())
+
+	collection := client.Database("productStore").Collection("brands")
+	filter := bson.D{{"brand_id", id}}
+	cur, err := collection.Find(context.TODO(), filter)
+
+	if err != nil {
+		log.Fatal(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer cur.Close(context.TODO())
+	// brand exit or not
+	if cur.RemainingBatchLength() == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	var brands []bson.M
+	for cur.Next(context.TODO()) {
+		var brand bson.M
+		err := cur.Decode(&brand)
+		if err != nil {
+			log.Fatal(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		brands = append(brands, brand)
+	}
+
 	brandsJSON, err := json.MarshalIndent(brands, "", "  ")
 	if err != nil {
 		log.Fatal(err)
@@ -75,7 +129,6 @@ func PostBrand(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer client.Disconnect(context.TODO())
-	// Access the "brands" collection in the "productStore" database
 	collection := client.Database("productStore").Collection("brands")
 
 	// Create a unique compound index on the "brand_id" and "brand_name" fields

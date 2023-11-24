@@ -54,6 +54,56 @@ func GetStocks(w http.ResponseWriter, r *http.Request) {
 	w.Write(stocksJSON)
 }
 
+func GetStockById(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idStr)
+
+	client, err := CreateMongoDBClient()
+	if err != nil {
+		log.Fatal(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer client.Disconnect(context.TODO())
+
+	collection := client.Database("productStore").Collection("stocks")
+	filter := bson.D{{"stock_id", id}}
+	cur, err := collection.Find(context.TODO(), filter)
+
+	if err != nil {
+		log.Fatal(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer cur.Close(context.TODO())
+	// stock exit or not
+	if cur.RemainingBatchLength() == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	var stocks []bson.M
+	for cur.Next(context.TODO()) {
+		var stock bson.M
+		err := cur.Decode(&stock)
+		if err != nil {
+			log.Fatal(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		stocks = append(stocks, stock)
+	}
+
+	stocksJSON, err := json.MarshalIndent(stocks, "", "  ")
+	if err != nil {
+		log.Fatal(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(stocksJSON)
+}
+
 func PostStocks(w http.ResponseWriter, r *http.Request) {
 	var temp data.Stock
 	if err := json.NewDecoder(r.Body).Decode(&temp); err != nil {

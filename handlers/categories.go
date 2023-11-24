@@ -41,6 +41,60 @@ func GetCategories(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+		statusNow := category["category_status_id"].(int32)
+		active := int32(1)
+		if statusNow == active {
+			categories = append(categories, category)
+		}
+	}
+
+	categoriesJSON, err := json.MarshalIndent(categories, "", "  ")
+	if err != nil {
+		log.Fatal(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(categoriesJSON)
+}
+
+func GetCategoryById(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idStr)
+
+	client, err := CreateMongoDBClient()
+	if err != nil {
+		log.Fatal(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer client.Disconnect(context.TODO())
+
+	collection := client.Database("productStore").Collection("categories")
+	filter := bson.D{{"category_id", id}}
+	cur, err := collection.Find(context.TODO(), filter)
+
+	if err != nil {
+		log.Fatal(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer cur.Close(context.TODO())
+	// category exit or not
+	if cur.RemainingBatchLength() == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	var categories []bson.M
+	for cur.Next(context.TODO()) {
+		var category bson.M
+		err := cur.Decode(&category)
+		if err != nil {
+			log.Fatal(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		categories = append(categories, category)
 	}
 

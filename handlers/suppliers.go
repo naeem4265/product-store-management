@@ -41,6 +41,60 @@ func GetSuppliers(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+		statusNow := supplier["supplier_status_id"].(int32)
+		active := int32(1)
+		if statusNow == active {
+			suppliers = append(suppliers, supplier)
+		}
+	}
+
+	suppliersJSON, err := json.MarshalIndent(suppliers, "", "  ")
+	if err != nil {
+		log.Fatal(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(suppliersJSON)
+}
+
+func GetSupplierById(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idStr)
+
+	client, err := CreateMongoDBClient()
+	if err != nil {
+		log.Fatal(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer client.Disconnect(context.TODO())
+
+	collection := client.Database("productStore").Collection("suppliers")
+	filter := bson.D{{"supplier_id", id}}
+	cur, err := collection.Find(context.TODO(), filter)
+
+	if err != nil {
+		log.Fatal(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer cur.Close(context.TODO())
+	// supplier exit or not
+	if cur.RemainingBatchLength() == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	var suppliers []bson.M
+	for cur.Next(context.TODO()) {
+		var supplier bson.M
+		err := cur.Decode(&supplier)
+		if err != nil {
+			log.Fatal(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		suppliers = append(suppliers, supplier)
 	}
 
