@@ -3,13 +3,15 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/naeem4265/product-store/data"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func GetCategories(w http.ResponseWriter, r *http.Request) {
@@ -20,6 +22,7 @@ func GetCategories(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer client.Disconnect(context.TODO())
+
 	collection := client.Database("productStore").Collection("categories")
 	cur, err := collection.Find(context.TODO(), bson.D{})
 	if err != nil {
@@ -28,6 +31,7 @@ func GetCategories(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer cur.Close(context.TODO())
+
 	var categories []bson.M
 	for cur.Next(context.TODO()) {
 		var category bson.M
@@ -39,6 +43,7 @@ func GetCategories(w http.ResponseWriter, r *http.Request) {
 		}
 		categories = append(categories, category)
 	}
+
 	categoriesJSON, err := json.MarshalIndent(categories, "", "  ")
 	if err != nil {
 		log.Fatal(err)
@@ -52,20 +57,41 @@ func GetCategories(w http.ResponseWriter, r *http.Request) {
 func PostCategories(w http.ResponseWriter, r *http.Request) {
 	var temp data.Category
 	if err := json.NewDecoder(r.Body).Decode(&temp); err != nil {
-		fmt.Printf("here %v\n", temp)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	client, err := CreateMongoDBClient()
 	if err != nil {
+		log.Printf("Error creating MongoDB client: %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "Error creating MongoDB client: %v", err)
 		return
 	}
 	defer client.Disconnect(context.TODO())
+
 	collection := client.Database("productStore").Collection("categories")
+
+	indexModel := mongo.IndexModel{
+		Keys:    bson.M{"category_id": 1},
+		Options: options.Index().SetUnique(true),
+	}
+	_, err = collection.Indexes().CreateOne(context.TODO(), indexModel)
+	if err != nil {
+		if mongo.IsDuplicateKeyError(err) {
+			w.WriteHeader(http.StatusConflict)
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	_, err = collection.InsertOne(context.TODO(), temp)
 	if err != nil {
+		if mongo.IsDuplicateKeyError(err) {
+			log.Printf("Duplicate Brand Id. Error inserting document: %v\n", err)
+			w.WriteHeader(http.StatusConflict)
+			return
+		}
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -73,63 +99,65 @@ func PostCategories(w http.ResponseWriter, r *http.Request) {
 }
 
 func PutCategories(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idStr)
+
 	var temp data.Category
 	if err := json.NewDecoder(r.Body).Decode(&temp); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	// Create the MongoDB client
+	if id != temp.CategoryId {
+		w.WriteHeader(http.StatusConflict)
+		return
+	}
+
 	client, err := CreateMongoDBClient()
 	if err != nil {
 		log.Fatal(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	defer client.Disconnect(context.TODO()) // Make sure to close the client when done
+	defer client.Disconnect(context.TODO())
 
-	// Access the "categories" collection in the "productStore" database
 	collection := client.Database("productStore").Collection("categories")
-
-	// Create a filter based on the provided ID
 	filter := bson.D{{"category_id", id}}
-
-	// Create an update document using $set operator
 	update := bson.D{{"$set", temp}}
-
-	// Update the document in the "categories" collection
-	_, err = collection.UpdateOne(context.TODO(), filter, update)
+	result, err := collection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		log.Fatal(err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if result.ModifiedCount == 0 {
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 }
 
 func DeleteCategories(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idStr)
 
-	// Create the MongoDB client
 	client, err := CreateMongoDBClient()
 	if err != nil {
 		log.Fatal(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	defer client.Disconnect(context.TODO()) // Make sure to close the client when done
-
-	// Access the "categories" collection in the "productStore" database
+	defer client.Disconnect(context.TODO())
 	collection := client.Database("productStore").Collection("categories")
 
-	// Create a filter based on the provided ID
 	filter := bson.D{{"category_id", id}}
-
-	// Delete the document from the "categories" collection
-	_, err = collection.DeleteOne(context.TODO(), filter)
+	result, err := collection.DeleteOne(context.TODO(), filter)
 	if err != nil {
 		log.Fatal(err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if result.DeletedCount == 0 {
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	w.WriteHeader(http.StatusOK)

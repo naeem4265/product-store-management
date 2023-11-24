@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -25,6 +24,7 @@ func GetBrands(w http.ResponseWriter, r *http.Request) {
 	}
 	defer client.Disconnect(context.TODO()) // Make sure to close the client when done
 	// Access the "brands" collection in the "productStore" database
+
 	collection := client.Database("productStore").Collection("brands")
 	// Get the documents from the "brands" collection
 	cur, err := collection.Find(context.TODO(), bson.D{})
@@ -63,7 +63,6 @@ func PostBrand(w http.ResponseWriter, r *http.Request) {
 	// get data from json
 	var temp data.Brand
 	if err := json.NewDecoder(r.Body).Decode(&temp); err != nil {
-		fmt.Printf("here %v\n", temp)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
