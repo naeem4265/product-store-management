@@ -72,7 +72,7 @@ sudo systemctl start mongod
 ### Step-6: Download mongodb database files and restore to the database
 [files](https://github.com/naeem4265/product-store-management)
 
-    mongorestore --db productStore /path/to/backup_directory/your_database_name
+   mongorestore --db productStore /path/to/backup_directory/your_database_name
 
 ### Step-7: Go to github directory and mount this your local pc
 [Repository](https://github.com/naeem4265/product-store-management)
