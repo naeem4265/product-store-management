@@ -62,3 +62,12 @@ type Stock struct {
 	StockQuantity int    `json:"stock_quantity" bson:"stock_quantity"`
 	UpdatedAt     string `json:"updated_at" bson:"updated_at"`
 }
+
+/*
+{
+    "stock_id": 1,
+    "product_id": 123,
+    "stock_quantity": 100,
+    "updated_at": "2023-01-01T12:00:00Z"
+}
+*/

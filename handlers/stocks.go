@@ -110,6 +110,11 @@ func PostStocks(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	if temp.StockQuantity < 0 {
+		log.Printf("Quantity must be positive\n")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 	client, err := CreateMongoDBClient()
 	if err != nil {
@@ -161,6 +166,11 @@ func PutStocks(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
+	if temp.StockQuantity < 0 {
+		log.Printf("Quantity must be positive\n")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 	client, err := CreateMongoDBClient()
 	if err != nil {
@@ -180,7 +190,7 @@ func PutStocks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if result.ModifiedCount == 0 {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
