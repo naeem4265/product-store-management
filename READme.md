@@ -81,7 +81,10 @@ sudo systemctl start mongod
 
 
 ### Step-8: Run the go files from terminal
-    go run *.go
+```
+   go mod tidy && go mod vendor
+   go run *.go
+```
 If the go run command runs successfully, you will see the message "Server started at :8080."
 
 
