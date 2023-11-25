@@ -47,7 +47,7 @@ func (lru *LRUCache) Get(key int) string {
 	return lru.ref[key].name
 }
 
-func (lru *LRUCache) Put(id int, name string) {
+func (lru *LRUCache) Listen(id int, name string) {
 	if lru.head == nil {
 		lru.head = lru.ref[id]
 		lru.tail = lru.head
@@ -56,6 +56,26 @@ func (lru *LRUCache) Put(id int, name string) {
 		lru.ref[id].parent = nil
 		lru.ref[id].child = nil
 		lru.capacity--
+	} else if lru.ref[id].id != -1 {
+		lru.ref[id].id = id
+		lru.ref[id].name = name
+		if lru.tail == lru.ref[id] {
+			return
+		}
+		if lru.head == lru.ref[id] {
+			lru.head = lru.head.child
+			lru.ref[id].parent = lru.tail
+			lru.tail.child = lru.ref[id]
+			lru.ref[id].child = nil
+			lru.tail = lru.ref[id]
+		} else {
+			lru.ref[id].parent.child = lru.ref[id].child
+			lru.ref[id].child.parent = lru.ref[id].parent
+			lru.tail.child = lru.ref[id]
+			lru.ref[id].parent = lru.tail
+			lru.ref[id].child = nil
+			lru.tail = lru.ref[id]
+		}
 	} else {
 		lru.ref[id].id = id
 		lru.ref[id].name = name
@@ -77,10 +97,10 @@ func (lru *LRUCache) Put(id int, name string) {
 
 func main() {
 	obj := Constructor(100)
-	obj.Put(1, "song1")
-	obj.Put(2, "song2")
-	obj.Put(3, "song3")
+	obj.Listen(1, "song1")
+	obj.Listen(2, "song2")
+	obj.Listen(3, "song3")
 	fmt.Println(obj.Get(1))
-	obj.Put(4, "song4")
-	fmt.Println(obj.Get(2))
+	obj.Listen(4, "song4")
+	fmt.Println(obj.Get(3))
 }
