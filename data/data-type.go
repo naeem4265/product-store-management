@@ -30,22 +30,6 @@ type Product struct {
 	StatusID       int     `json:"product_status_id" bson:"product_status_id"`
 }
 
-/*
-{
-  "product_id": 1,
-  "product_name": "Example Product",
-  "product_description": "A detailed description of the product.",
-  "product_specifications": "Specifications of the product.",
-  "product_brand_id": 123,
-  "product_category_id": 456,
-  "product_supplier_id": 789,
-  "product_unit_price": 49.99,
-  "product_discount_price": 39.99,
-  "product_tags": "electronics, gadgets",
-  "product_status_id": 1
-}
-*/
-
 type Supplier struct {
 	ID         int    `json:"supplier_id" bson:"supplier_id"`
 	Name       string `json:"supplier_name" bson:"supplier_name"`
@@ -63,11 +47,59 @@ type Stock struct {
 	UpdatedAt     string `json:"updated_at" bson:"updated_at"`
 }
 
+/* Brand insert
+{
+  "brand_id": 5,
+  "brand_name": "New Balance",
+  "brand_status_id": 1,
+  "brand_created_at": "2023-11-25T09:30:00Z"
+}
+*/
+
+/* Category insert
+{
+  "category_id": 1,
+  "category_parent_id": 0,
+  "category_sequence": "A",
+  "category_name": "Running Shoes",
+  "category_status_id": 1,
+  "category_created_at": "2023-11-25T12:30:00Z"
+}
+*/
+
+/* supplier insert
+{
+  "supplier_id": 5,
+  "supplier_name": "InnoTech Innovations",
+  "supplier_email": "inno@example.com",
+  "supplier_phone": "+1 (555) 678-9012",
+  "supplier_status_id": 1,
+  "supplier_is_verified_supplier": true,
+  "supplier_created_at": "2023-11-25T19:00:00Z"
+}
+*/
+
 /*
 {
     "stock_id": 1,
     "product_id": 123,
     "stock_quantity": 100,
     "updated_at": "2023-01-01T12:00:00Z"
+}
+*/
+
+/* Product insert
+{
+  "product_id": 1,
+  "product_name": "Running Shoes - Model A",
+  "product_description": "High-performance running shoes for all terrains.",
+  "product_specifications": "Size: 9, Color: Blue",
+  "product_brand_id": 1,
+  "product_category_id": 1,
+  "product_supplier_id": 1,
+  "product_unit_price": 89.99,
+  "product_discount_price": 79.99,
+  "product_tags": "running, sports, shoes",
+  "product_status_id": 1
 }
 */
