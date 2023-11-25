@@ -70,9 +70,9 @@ sudo systemctl start mongod
 [postman](https://www.postman.com/downloads/)
 
 ### Step-6: Download mongodb database files and restore to the database
-[files](https://github.com/naeem4265/product-store-management)
+[folder](https://github.com/naeem4265/product-store-management/tree/master/database)
 
-   mongorestore --db productStore /path/to/backup_directory/your_database_name
+    mongorestore --db productStore /path/to/backup_directory/productStore
 
 ### Step-7: Go to github directory and mount this your local pc
 [Repository](https://github.com/naeem4265/product-store-management)
