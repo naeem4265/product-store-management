@@ -50,6 +50,7 @@ The E-commerce Management System is developed to enhance the efficiency, organiz
 # Steps to run the project
 
 ### Step-1: Download and install mongodb. Check and start mongodb
+https://www.youtube.com/watch?v=HSIh8UswVVY&t=527s
 [mongodb](https://www.mongodb.com/try/download/community)
 ```
 sudo systemctl status mongod
